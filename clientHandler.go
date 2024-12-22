@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"strings"
 )
@@ -44,8 +45,17 @@ func ClientName(client net.Conn) {
 		case -1:
 			client.Write([]byte("Name contains invalid characters. Please choose another name.\n[ENTER YOUR NAME]: "))
 		default:
-			client.Write([]byte(name + ", welcome to our chat!\n"))
-			return
+			fmt.Println(UserList.NameOccupied(name))
+			if !UserList.NameOccupied(name) {
+				UserList.AddClient(&Client{
+					conn: client,
+					name: name,
+				})
+				client.Write([]byte(name + ", welcome to our chat!\n"))
+				return
+			} else {
+				client.Write([]byte("Name is already taken. Please choose another name.\n[ENTER YOUR NAME]: "))
+			}
 		}
 
 	}
@@ -64,4 +74,5 @@ func nameIsValid(name string) int {
 		}
 	}
 	return 1
+
 }

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
 )
 
+
+
 func main() {
+	UserList = CreateUserList()
 	startServer()
 }
 
@@ -35,38 +37,4 @@ func startServer() {
 
 	}
 
-}
-
-func handleConnection(conn net.Conn, requests chan<- Request) {
-
-	defer conn.Close()
-	WelcomeClient(conn)
-	fmt.Printf("Client connected (%s)\n", conn.RemoteAddr())
-
-	dataStorage := make([]byte, 1024)
-
-	for { 
-		_, err := conn.Read(dataStorage)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Printf("Client left the chat %s\n", conn.RemoteAddr())
-				return
-			}
-			fmt.Printf("Error reading data from %s. %v", conn.RemoteAddr(), err)
-			return
-		}
-
-		// fmt.Println("[" + string(dataStorage) + "]")
-		requests <- Request{
-			client: Client{conn, ""},
-			data:   dataStorage,
-		}
-	}
-
-}
-
-func processRequests(requests <-chan Request) {
-	for request := range requests {
-		fmt.Printf("Received: %s", string(request.data))
-	}
 }
