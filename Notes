@@ -6,3 +6,4 @@
 6. History
 7. Separate handler for broadcasting
 8. Channels structure (define: Oleg)
+9. Get port from program attributes (+ default port)
