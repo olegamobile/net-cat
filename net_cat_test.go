@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var clientsNames   = make(map[net.Conn]string)
+var clientsNames = make(map[net.Conn]string)
 
 func testClientSendData(t *testing.T, serverAddr string, data string) string {
 
@@ -35,7 +35,7 @@ func testClientSendData(t *testing.T, serverAddr string, data string) string {
 
 func TestServerCommunication(t *testing.T) {
 
-	go startServer()
+	go StartServer()
 
 	time.Sleep(1 * time.Second)
 

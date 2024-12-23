@@ -1,9 +1,10 @@
 + 1. List of members (declare var and hadle the list - adding new users, removing those who left, changing names (optional))
 + 2. Message format: [2020-01-20 15:48:41][client.name]:[client.message]
 + 3. Find out reason of corrupted messages
-4. Limit 10 users (thoe who have name, not connections) per room
-5. Logs (not detailed, just messages history (p.2) + actions)
-6. History
++ 4. Limit 10 users (thos who have name, not connections) per room
++ 5. Logs (not detailed, just messages history (p.2) + actions)
++ 6. History 
+6.5. Add mutexes to history handling
 7. Separate handler for broadcasting
-8. Channels structure (define: Oleg)
-9. Get port from program attributes (+ default port)
+8. Channel for broadcsting structure
++ 9. Get port from program attributes (+ default port)

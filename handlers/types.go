@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"net"
@@ -18,7 +18,9 @@ type Request struct {
 
 type Users struct {
 	users map[string]*Client
-	mu   sync.Mutex
+	mu    sync.Mutex
 }
 
-var UserList Users
+const RoomSize = 10
+const LogFileDir = "logs"
+var Port = "8989"

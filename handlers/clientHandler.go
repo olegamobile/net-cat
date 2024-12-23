@@ -1,8 +1,7 @@
-package main
+package handlers
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 	"strings"
 )
@@ -29,9 +28,16 @@ func WelcomeClient(client net.Conn) {
 
 	client.Write([]byte("Welcome to TCP-Chat!" + welcomeIcon))
 	ClientName(client)
+	client.Write([]byte(MsgHistory))
 }
 
 func ClientName(client net.Conn) {
+	_, namesCounter := UserList.GetAllClients()
+	if namesCounter > RoomSize-1 {
+		client.Write([]byte("\nSorry, chat room is full, please try again later.\n"))
+		client.Close()
+		return
+	}
 
 	client.Write([]byte("[ENTER YOUR NAME]: "))
 	scanner := bufio.NewScanner(client)
@@ -45,13 +51,14 @@ func ClientName(client net.Conn) {
 		case -1:
 			client.Write([]byte("Name contains invalid characters. Please choose another name.\n[ENTER YOUR NAME]: "))
 		default:
-			fmt.Println(UserList.NameOccupied(name))
 			if !UserList.NameOccupied(name) {
 				UserList.AddClient(&Client{
 					conn: client,
 					name: name,
 				})
 				client.Write([]byte(name + ", welcome to our chat!\n"))
+				// send history to user
+
 				return
 			} else {
 				client.Write([]byte("Name is already taken. Please choose another name.\n[ENTER YOUR NAME]: "))

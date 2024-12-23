@@ -1,19 +1,23 @@
-package main
+package handlers
 
 import (
 	"fmt"
 	"io"
 	"net"
 	"strings"
-	"time"
 )
 
-func handleConnection(conn net.Conn, requests chan<- Request) {
+var UserList = CreateUserList()
+var MessagePipe = make(chan Request, 100)
+
+func HandleConnection(conn net.Conn, requests chan<- Request) {
 
 	var message string
 	defer conn.Close()
 	WelcomeClient(conn)
-	fmt.Printf("Client connected (%s)\n", conn.RemoteAddr())
+	name := UserList.GetName(conn)
+	message = fmt.Sprintf("[%v] User %v entered chat", getTimestamp(), name)
+	LogWriter(message, LogFile)
 
 	dataStorage := make([]byte, 1024)
 
@@ -22,9 +26,11 @@ func handleConnection(conn net.Conn, requests chan<- Request) {
 		if err != nil {
 			if err == io.EOF {
 				CloseConnection(conn)
+
 				return
 			}
-			fmt.Printf("Error reading data from %s. %v", conn.RemoteAddr(), err)
+			// fmt.Printf("Error reading data from %s. %v", conn.RemoteAddr(), err) pochemu voznikaet oshibka?
+			fmt.Printf("Error reading data from %s.", conn.RemoteAddr())
 			return
 		}
 		message = strings.TrimSpace(string(dataStorage[:n]))
@@ -41,17 +47,8 @@ func CloseConnection(conn net.Conn) {
 	if name != "" {
 		UserList.RemoveClient(name)
 	}
-	fmt.Printf("%v left the chat %s\n", name, conn.RemoteAddr())
-}
-
-func processRequests(requests <-chan Request) {
-	for request := range requests {
-		if len(request.data) != 0 {
-			now := time.Now()
-			timestamp := now.Format("2006-01-02 15:04:05")
-			fmt.Printf("[%v][%v]: %s\n", timestamp, request.client.name, request.data)
-		}
-	}
+	message := fmt.Sprintf("[%v] User %v left chat", getTimestamp(), name)
+	LogWriter(message, LogFile)
 }
 
 func (m *Users) AddClient(client *Client) {
@@ -66,20 +63,24 @@ func (m *Users) RemoveClient(name string) {
 	delete(m.users, name)
 }
 
-func (m *Users) GetAllClients() []*Client {
+func (m *Users) GetAllClients() ([]*Client, int) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
+	namesCounter := 0
 	var allClients []*Client
 	for _, client := range m.users {
+		if client.name != "" {
+			namesCounter++
+		}
 		allClients = append(allClients, client)
 	}
-	return allClients
+	return allClients, namesCounter
 }
 
 func (m *Users) NameOccupied(name string) bool {
 
-	allClients := UserList.GetAllClients()
+	allClients, _ := UserList.GetAllClients()
+	fmt.Println(len(allClients))
 	for _, user := range allClients {
 		fmt.Println("Name: " + user.name)
 		if user.name == name {
@@ -91,7 +92,7 @@ func (m *Users) NameOccupied(name string) bool {
 
 func (m *Users) GetName(conn net.Conn) string {
 
-	allClients := UserList.GetAllClients()
+	allClients, _ := UserList.GetAllClients()
 	for _, user := range allClients {
 		if user.conn == conn {
 			return user.name

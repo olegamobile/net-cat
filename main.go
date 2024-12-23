@@ -3,28 +3,31 @@ package main
 import (
 	"fmt"
 	"net"
+	"net_cat/handlers"
+	"os"
 )
 
-
-
 func main() {
-	UserList = CreateUserList()
-	startServer()
+	port := getPort()
+	StartServer(port)
 }
 
-func startServer() {
-	listener, err := net.Listen("tcp", "localhost:8080")
+func StartServer(port string) {
+	listener, err := net.Listen("tcp", "localhost:"+port)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 		return
 	}
 	defer listener.Close()
 
-	fmt.Println("Server is listening on localhost:8080...")
+	fmt.Println("Server is listening on localhost:" + port)
+	// create log file
+	handlers.LogFileCreate()
+	defer handlers.LogFile.Close()
 
-	requests := make(chan Request, 100)
+	message := make(chan handlers.Request, 100)
 
-	go processRequests(requests)
+	go handlers.ProcessMessages(message)
 
 	for {
 		conn, err := listener.Accept()
@@ -33,8 +36,23 @@ func startServer() {
 			continue
 		}
 
-		go handleConnection(conn, requests)
+		go handlers.HandleConnection(conn, message)
 
 	}
 
+}
+
+func getPort() string {
+	args := os.Args[1:]
+	argsLen := len(args)
+	switch {
+	case argsLen == 0:
+		return "8989"
+	case argsLen == 1:
+		return args[0]
+	default:
+		fmt.Println("[USAGE]: ./TCPChat $port")
+		os.Exit(0)
+	}
+	return ""
 }
