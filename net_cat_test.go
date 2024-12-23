@@ -34,20 +34,34 @@ func testClientSendData(t *testing.T, serverAddr string, data string) string {
 }
 
 func TestServerCommunication(t *testing.T) {
-
-	go StartServer()
+	port := "8989"
+	go StartServer(port)
 
 	time.Sleep(1 * time.Second)
 
-	serverAddr := "localhost:8080"
+	serverAddr := "localhost:" + port
 
 	tests := []struct {
 		data     string
 		expected string
 	}{
-		{"Hello, Server!", "Acknowledged"},
-		{"Test Message", "Acknowledged"},
-		{"Another Test", "Acknowledged"},
+		{"Hello, Server!", `Welcome to TCP-Chat!
+         _nnnn_
+        dGGGGMMb
+       @p~qp~~qMb
+       M|@||@) M|
+       @,----.JM|
+      JS^\__/  qKL
+     dZP        qKRb
+    dZP          qKKb
+   fZP            SMMb
+   HZM            MMMM
+   FqM            MMMM
+ __| ".        |\dS"qML
+|    ` + "`.       | `' \\Zq\n" +
+	"_)      \\.___.,|     .'\n" +
+	"\\____   )MMMMMP|   .'\n" +
+	"     `-'       `--'\n" + "[ENTER YOUR NAME]: "},
 	}
 
 	// running test

@@ -1,0 +1,4 @@
+[2024-12-23 20:17:14] User Hello, Server! entered chat
+[2024-12-23 20:17:14] User Test Message entered chat
+[2024-12-23 20:17:14] User Test Message left chat
+[2024-12-23 20:17:14] User Another Test entered chat
