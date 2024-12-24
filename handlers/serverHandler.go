@@ -9,6 +9,7 @@ import (
 
 var UserList = CreateUserList()
 var MessagePipe = make(chan Request, 100)
+var BrodcastPipe = make(chan Request, 100)
 
 func HandleConnection(conn net.Conn, requests chan<- Request) {
 
@@ -16,8 +17,9 @@ func HandleConnection(conn net.Conn, requests chan<- Request) {
 	defer conn.Close()
 	WelcomeClient(conn)
 	name := UserList.GetName(conn)
-	message = fmt.Sprintf("[%v] User %v entered chat", getTimestamp(), name)
+	message = fmt.Sprintf("[%v] User %v joined chat", GetTimestamp(), name)
 	LogWriter(message, LogFile)
+	BrodcastPipe <- Request{client: Client{conn: conn, name: name}, data: message + "\n"}
 
 	dataStorage := make([]byte, 1024)
 
@@ -47,8 +49,9 @@ func CloseConnection(conn net.Conn) {
 	if name != "" {
 		UserList.RemoveClient(name)
 	}
-	message := fmt.Sprintf("[%v] User %v left chat", getTimestamp(), name)
+	message := fmt.Sprintf("[%v] User %v left chat", GetTimestamp(), name)
 	LogWriter(message, LogFile)
+	BrodcastPipe <- Request{client: Client{conn: conn, name: name}, data: message + "\n"}
 }
 
 func (m *Users) AddClient(client *Client) {

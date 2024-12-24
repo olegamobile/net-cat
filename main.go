@@ -20,14 +20,11 @@ func StartServer(port string) {
 	}
 	defer listener.Close()
 
-	fmt.Println("Server is listening on localhost:" + port)
-	// create log file
 	handlers.LogFileCreate()
 	defer handlers.LogFile.Close()
 
-	message := make(chan handlers.Request, 100)
-
-	go handlers.ProcessMessages(message)
+	go handlers.ProcessMessages(handlers.MessagePipe)
+	go handlers.BroadcastMessages(handlers.BrodcastPipe)
 
 	for {
 		conn, err := listener.Accept()
@@ -36,7 +33,7 @@ func StartServer(port string) {
 			continue
 		}
 
-		go handlers.HandleConnection(conn, message)
+		go handlers.HandleConnection(conn, handlers.MessagePipe)
 
 	}
 

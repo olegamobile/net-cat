@@ -16,13 +16,8 @@ func ProcessMessages(messages <-chan Request) {
 			// if "exit" - disconnect
 
 			formattedMessage := formatMessage(message)
-			fmt.Println(formattedMessage)
 			LogWriter(formattedMessage, LogFile)
-
-			// broadcast formatted message (separate function)
-			// add formatted message to history
-			// log formatted message (separtate function)
-
+			BrodcastPipe <- Request{client: message.client, data: formattedMessage + "\n"}
 		}
 	}
 }
@@ -30,7 +25,7 @@ func ProcessMessages(messages <-chan Request) {
 func LogFileCreate() *os.File {
 
 	timeStamp := time.Now()
-	logFileName := fmt.Sprintf("%s.txt", timeStamp.Format("20060102-150405"))
+	logFileName := fmt.Sprintf("%s-%v.txt", timeStamp.Format("20060102-150405"), Port)
 	logFile, err := os.OpenFile(LogFileDir+"/"+logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 
 	if err != nil {
@@ -51,11 +46,22 @@ func LogWriter(formattedMessage string, logFile *os.File) {
 }
 
 func formatMessage(message Request) string {
-	timestamp := getTimestamp()
+	timestamp := GetTimestamp()
 	return fmt.Sprintf("[%v][%v]: %s", timestamp, message.client.name, message.data)
 }
 
-func getTimestamp() string {
+func GetTimestamp() string {
 	now := time.Now()
 	return now.Format("2006-01-02 15:04:05")
+}
+
+func BroadcastMessages(broadcastedMessages <-chan Request) {
+	for message := range broadcastedMessages {
+		allUsers, _ := UserList.GetAllClients()
+		for _, user := range allUsers {
+			if message.client != *user {
+				user.conn.Write([]byte(message.data))
+			}
+		}
+	}
 }
