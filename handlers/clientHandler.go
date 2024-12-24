@@ -44,7 +44,7 @@ func ClientName(client net.Conn) {
 
 	for {
 		scanner.Scan()
-		name := scanner.Text()
+		name := strings.TrimSpace(scanner.Text())
 		switch nameIsValid(name) {
 		case 0:
 			client.Write([]byte("Name should contain visible characters. Please enter a valid name.\n[ENTER YOUR NAME]: "))
@@ -56,7 +56,7 @@ func ClientName(client net.Conn) {
 					conn: client,
 					name: name,
 				})
-				client.Write([]byte(name + ", welcome to our chat!\n"))
+				client.Write([]byte(name + ", welcome to our chat!\nType " + Red + "/exit" + Reset + " when you want to leave the chat.\n"))
 				// send history to user
 
 				return
@@ -70,7 +70,6 @@ func ClientName(client net.Conn) {
 }
 
 func nameIsValid(name string) int {
-
 	name = strings.TrimSpace(name)
 	if len(name) == 0 {
 		return 0

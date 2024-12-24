@@ -10,6 +10,12 @@ import (
 var UserList = CreateUserList()
 var MessagePipe = make(chan Request, 100)
 var BrodcastPipe = make(chan Request, 100)
+var (
+	Green = "\033[32m" // Green text color
+	Red   = "\033[31m" // Red text color
+	White = "\033[37m" // White text color (default)
+	Reset = "\033[0m"  // Reset to default terminal color
+)
 
 func HandleConnection(conn net.Conn, requests chan<- Request) {
 
@@ -17,7 +23,7 @@ func HandleConnection(conn net.Conn, requests chan<- Request) {
 	defer conn.Close()
 	WelcomeClient(conn)
 	name := UserList.GetName(conn)
-	message = fmt.Sprintf("[%v] User %v joined chat", GetTimestamp(), name)
+	message = fmt.Sprintf("[%v] %vUser %v joined chat%v", GetTimestamp(), Green, name, Reset)
 	LogWriter(message, LogFile)
 	BrodcastPipe <- Request{client: Client{conn: conn, name: name}, data: message + "\n"}
 
@@ -28,11 +34,8 @@ func HandleConnection(conn net.Conn, requests chan<- Request) {
 		if err != nil {
 			if err == io.EOF {
 				CloseConnection(conn)
-
 				return
 			}
-			// fmt.Printf("Error reading data from %s. %v", conn.RemoteAddr(), err) pochemu voznikaet oshibka?
-			fmt.Printf("Error reading data from %s.", conn.RemoteAddr())
 			return
 		}
 		message = strings.TrimSpace(string(dataStorage[:n]))
@@ -49,29 +52,30 @@ func CloseConnection(conn net.Conn) {
 	if name != "" {
 		UserList.RemoveClient(name)
 	}
-	message := fmt.Sprintf("[%v] User %v left chat", GetTimestamp(), name)
+	message := fmt.Sprintf("[%v] %vUser %v left the chat%v", GetTimestamp(), Red, name, Reset)
 	LogWriter(message, LogFile)
 	BrodcastPipe <- Request{client: Client{conn: conn, name: name}, data: message + "\n"}
+	conn.Close()
 }
 
-func (m *Users) AddClient(client *Client) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.users[client.name] = client
+func (users Users) AddClient(client *Client) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	users[client.name] = client
 }
 
-func (m *Users) RemoveClient(name string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	delete(m.users, name)
+func (users Users) RemoveClient(name string) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	delete(users, name)
 }
 
-func (m *Users) GetAllClients() ([]*Client, int) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (users Users) GetAllClients() ([]*Client, int) {
+	Lock.Lock()
+	defer Lock.Unlock()
 	namesCounter := 0
 	var allClients []*Client
-	for _, client := range m.users {
+	for _, client := range users {
 		if client.name != "" {
 			namesCounter++
 		}
@@ -80,12 +84,9 @@ func (m *Users) GetAllClients() ([]*Client, int) {
 	return allClients, namesCounter
 }
 
-func (m *Users) NameOccupied(name string) bool {
-
+func (users *Users) NameOccupied(name string) bool {
 	allClients, _ := UserList.GetAllClients()
-	fmt.Println(len(allClients))
 	for _, user := range allClients {
-		fmt.Println("Name: " + user.name)
 		if user.name == name {
 			return true
 		}
@@ -93,7 +94,7 @@ func (m *Users) NameOccupied(name string) bool {
 	return false
 }
 
-func (m *Users) GetName(conn net.Conn) string {
+func (users *Users) GetName(conn net.Conn) string {
 
 	allClients, _ := UserList.GetAllClients()
 	for _, user := range allClients {
@@ -105,7 +106,5 @@ func (m *Users) GetName(conn net.Conn) string {
 }
 
 func CreateUserList() Users {
-	return Users{
-		users: make(map[string]*Client),
-	}
+	return make(map[string]*Client)
 }

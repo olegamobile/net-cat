@@ -16,11 +16,10 @@ type Request struct {
 	data   string
 }
 
-type Users struct {
-	users map[string]*Client
-	mu    sync.Mutex
-}
+type Users map[string]*Client
+
 
 const RoomSize = 10
 const LogFileDir = "logs"
 var Port = "8989"
+var Lock sync.Mutex

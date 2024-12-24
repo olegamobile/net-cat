@@ -18,9 +18,9 @@ func StartServer(port string) {
 		fmt.Println("Error starting server:", err)
 		return
 	}
-	defer listener.Close()
+	fmt.Println("Server is listening on localhost:" + port)
 
-	handlers.LogFileCreate()
+	defer listener.Close()
 	defer handlers.LogFile.Close()
 
 	go handlers.ProcessMessages(handlers.MessagePipe)

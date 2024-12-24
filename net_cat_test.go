@@ -61,7 +61,8 @@ func TestServerCommunication(t *testing.T) {
 |    ` + "`.       | `' \\Zq\n" +
 	"_)      \\.___.,|     .'\n" +
 	"\\____   )MMMMMP|   .'\n" +
-	"     `-'       `--'\n" + "[ENTER YOUR NAME]: "},
+	"     `-'       `--'\n"},
+
 	}
 
 	// running test

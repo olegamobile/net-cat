@@ -4,7 +4,7 @@
 + 4. Limit 10 users (thos who have name, not connections) per room
 + 5. Logs (not detailed, just messages history (p.2) + actions)
 + 6. History 
-6.5. Add mutexes to history handling
-7. Separate handler for broadcasting
-8. Channel for broadcsting structure (Oleg)
++ 6.5. Add mutexes to history handling
++ 7. Separate handler for broadcasting
++ 8. Channel for broadcsting structure (Oleg)
 + 9. Get port from program attributes (+ default port)

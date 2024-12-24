@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -13,13 +14,22 @@ var MsgHistory string
 func ProcessMessages(messages <-chan Request) {
 	for message := range messages {
 		if len(message.data) != 0 {
-			// if "exit" - disconnect
-
+			message.data = clearInput(message.data)
+			if message.data == "/exit" {
+				CloseConnection(message.client.conn)
+				continue
+			}
 			formattedMessage := formatMessage(message)
 			LogWriter(formattedMessage, LogFile)
 			BrodcastPipe <- Request{client: message.client, data: formattedMessage + "\n"}
 		}
 	}
+}
+
+func clearInput(message string) string {
+	message = strings.ReplaceAll(message, "\033", "")
+	message = strings.TrimSpace(message)
+	return message
 }
 
 func LogFileCreate() *os.File {
@@ -32,14 +42,17 @@ func LogFileCreate() *os.File {
 		log.Fatalf("Cannot create log file: %v", err)
 	}
 
-	// fmt.Println("Log file " + logFileName + " is created")
+	fmt.Println("Log file " + logFileName + " is created")
 	return logFile
 }
 
-func LogWriter(formattedMessage string, logFile *os.File) {
-	_, err := logFile.WriteString(formattedMessage + "\n")
-	MsgHistory += formattedMessage + "\n"
-	fmt.Println(formattedMessage)
+func LogWriter(message string, logFile *os.File) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	MsgHistory += message + "\n"
+	fmt.Println(message)
+	message = removeColors(message)
+	_, err := logFile.WriteString(message + "\n")
 	if err != nil {
 		fmt.Printf("Ooops, this cannot be added to the log file.\nAnd this is the reason why: %v\n", err)
 	}
@@ -48,6 +61,13 @@ func LogWriter(formattedMessage string, logFile *os.File) {
 func formatMessage(message Request) string {
 	timestamp := GetTimestamp()
 	return fmt.Sprintf("[%v][%v]: %s", timestamp, message.client.name, message.data)
+}
+
+func removeColors(message string) string {
+	message = strings.ReplaceAll(message, Green, "")
+	message = strings.ReplaceAll(message, Red, "")
+	message = strings.ReplaceAll(message, Reset, "")
+	return message
 }
 
 func GetTimestamp() string {
