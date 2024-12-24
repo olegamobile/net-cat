@@ -6,26 +6,11 @@ import (
 	"strings"
 )
 
-const welcomeIcon = `
-         _nnnn_
-        dGGGGMMb
-       @p~qp~~qMb
-       M|@||@) M|
-       @,----.JM|
-      JS^\__/  qKL
-     dZP        qKRb
-    dZP          qKKb
-   fZP            SMMb
-   HZM            MMMM
-   FqM            MMMM
- __| ".        |\dS"qML
-|    ` + "`.       | `' \\Zq\n" +
-	"_)      \\.___.,|     .'\n" +
-	"\\____   )MMMMMP|   .'\n" +
-	"     `-'       `--'\n"
+func CreateUserList() Users {
+	return make(map[string]*Client)
+}
 
 func WelcomeClient(client net.Conn) {
-
 	client.Write([]byte("Welcome to TCP-Chat!" + welcomeIcon))
 	ClientName(client)
 	client.Write([]byte(MsgHistory))
@@ -81,4 +66,51 @@ func nameIsValid(name string) int {
 	}
 	return 1
 
+}
+
+func (users Users) AddClient(client *Client) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	users[client.name] = client
+}
+
+func (users Users) RemoveClient(name string) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	delete(users, name)
+}
+
+func (users Users) GetAllClients() ([]*Client, int) {
+	Lock.Lock()
+	defer Lock.Unlock()
+	namesCounter := 0
+	var allClients []*Client
+	for _, client := range users {
+		if client.name != "" {
+			namesCounter++
+		}
+		allClients = append(allClients, client)
+	}
+	return allClients, namesCounter
+}
+
+func (users *Users) NameOccupied(name string) bool {
+	allClients, _ := UserList.GetAllClients()
+	for _, user := range allClients {
+		if user.name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (users *Users) GetName(conn net.Conn) string {
+
+	allClients, _ := UserList.GetAllClients()
+	for _, user := range allClients {
+		if user.conn == conn {
+			return user.name
+		}
+	}
+	return ""
 }

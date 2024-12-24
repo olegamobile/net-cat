@@ -8,13 +8,9 @@ import (
 	"time"
 )
 
-var LogFile = LogFileCreate()
-var MsgHistory string
-
 func ProcessMessages(messages <-chan Request) {
 	for message := range messages {
 		if len(message.data) != 0 {
-			message.data = clearInput(message.data)
 			if message.data == "/exit" {
 				CloseConnection(message.client.conn)
 				continue
@@ -26,13 +22,18 @@ func ProcessMessages(messages <-chan Request) {
 	}
 }
 
-func clearInput(message string) string {
-	message = strings.ReplaceAll(message, "\033", "")
-	message = strings.TrimSpace(message)
-	return message
+func BroadcastMessages(broadcastedMessages <-chan Request) {
+	for message := range broadcastedMessages {
+		allUsers, _ := UserList.GetAllClients()
+		for _, user := range allUsers {
+			if message.client != *user {
+				user.conn.Write([]byte(message.data))
+			}
+		}
+	}
 }
 
-func LogFileCreate() *os.File {
+func CreateLogFile() *os.File {
 
 	timeStamp := time.Now()
 	logFileName := fmt.Sprintf("%s-%v.txt", timeStamp.Format("20060102-150405"), Port)
@@ -59,8 +60,15 @@ func LogWriter(message string, logFile *os.File) {
 }
 
 func formatMessage(message Request) string {
+	clearedMessage := clearInput(message.data)
 	timestamp := GetTimestamp()
-	return fmt.Sprintf("[%v][%v]: %s", timestamp, message.client.name, message.data)
+	return fmt.Sprintf("[%v][%v]: %s", timestamp, message.client.name, clearedMessage)
+}
+
+func clearInput(message string) string {
+	message = strings.ReplaceAll(message, "\033", "")
+	message = strings.TrimSpace(message)
+	return message
 }
 
 func removeColors(message string) string {
@@ -73,15 +81,4 @@ func removeColors(message string) string {
 func GetTimestamp() string {
 	now := time.Now()
 	return now.Format("2006-01-02 15:04:05")
-}
-
-func BroadcastMessages(broadcastedMessages <-chan Request) {
-	for message := range broadcastedMessages {
-		allUsers, _ := UserList.GetAllClients()
-		for _, user := range allUsers {
-			if message.client != *user {
-				user.conn.Write([]byte(message.data))
-			}
-		}
-	}
 }
