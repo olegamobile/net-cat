@@ -13,58 +13,52 @@ func CreateUserList() Users {
 func WelcomeClient(client net.Conn) {
 	client.Write([]byte("Welcome to TCP-Chat!" + welcomeIcon))
 	ClientName(client)
+
 	client.Write([]byte(MsgHistory))
 }
 
-func ClientName(client net.Conn) {
-	_, namesCounter := UserList.GetAllClients()
+func ClientName(conn net.Conn) {
+	namesCounter := len(UserList)
 	if namesCounter > RoomSize-1 {
-		client.Write([]byte("\nSorry, chat room is full, please try again later.\n"))
-		client.Close()
+		conn.Write([]byte("\nSorry, chat room is full, please try again later.\n"))
+		conn.Close()
 		return
 	}
 
-	client.Write([]byte("[ENTER YOUR NAME]: "))
-	scanner := bufio.NewScanner(client)
+	conn.Write([]byte("[ENTER YOUR NAME]: "))
+	scanner := bufio.NewScanner(conn)
 
 	for {
 		scanner.Scan()
-		name := strings.TrimSpace(scanner.Text())
-		switch nameIsValid(name) {
-		case 0:
-			client.Write([]byte("Name should contain visible characters. Please enter a valid name.\n[ENTER YOUR NAME]: "))
-		case -1:
-			client.Write([]byte("Name contains invalid characters. Please choose another name.\n[ENTER YOUR NAME]: "))
-		default:
+		name := clearInput(scanner.Text())
+		if nameIsValid(conn, name) {
 			if !UserList.NameOccupied(name) {
 				UserList.AddClient(&Client{
-					conn: client,
+					conn: conn,
 					name: name,
 				})
-				client.Write([]byte(name + ", welcome to our chat!\nType " + Red + "/exit" + Reset + " when you want to leave the chat.\n"))
-				// send history to user
-
+				conn.Write([]byte(name + ", welcome to our chat!\nType " + Red + "/exit" + Reset + " when you want to leave the chat.\n"))
 				return
 			} else {
-				client.Write([]byte("Name is already taken. Please choose another name.\n[ENTER YOUR NAME]: "))
+				conn.Write([]byte("Name is already taken. Please choose another name.\n[ENTER YOUR NAME]: "))
 			}
 		}
-
 	}
-
 }
 
-func nameIsValid(name string) int {
+func nameIsValid(conn net.Conn, name string) bool {
 	name = strings.TrimSpace(name)
 	if len(name) == 0 {
-		return 0
+		conn.Write([]byte("Name should contain visible characters. Please enter a valid name.\n[ENTER YOUR NAME]: "))
+		return false
 	}
 	for _, ch := range name {
 		if ch < 32 || ch > 126 {
-			return -1
+			conn.Write([]byte("Name contains invalid characters. Please choose another name.\n[ENTER YOUR NAME]: "))
+			return false
 		}
 	}
-	return 1
+	return true
 
 }
 
@@ -80,22 +74,18 @@ func (users Users) RemoveClient(name string) {
 	delete(users, name)
 }
 
-func (users Users) GetAllClients() ([]*Client, int) {
+func (users Users) GetAllClients() []*Client {
 	Lock.Lock()
 	defer Lock.Unlock()
-	namesCounter := 0
 	var allClients []*Client
 	for _, client := range users {
-		if client.name != "" {
-			namesCounter++
-		}
 		allClients = append(allClients, client)
 	}
-	return allClients, namesCounter
+	return allClients
 }
 
 func (users *Users) NameOccupied(name string) bool {
-	allClients, _ := UserList.GetAllClients()
+	allClients := UserList.GetAllClients()
 	for _, user := range allClients {
 		if user.name == name {
 			return true
@@ -106,7 +96,7 @@ func (users *Users) NameOccupied(name string) bool {
 
 func (users *Users) GetName(conn net.Conn) string {
 
-	allClients, _ := UserList.GetAllClients()
+	allClients := UserList.GetAllClients()
 	for _, user := range allClients {
 		if user.conn == conn {
 			return user.name

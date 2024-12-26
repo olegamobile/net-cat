@@ -24,7 +24,7 @@ func ProcessMessages(messages <-chan Request) {
 
 func BroadcastMessages(broadcastedMessages <-chan Request) {
 	for message := range broadcastedMessages {
-		allUsers, _ := UserList.GetAllClients()
+		allUsers := UserList.GetAllClients()
 		for _, user := range allUsers {
 			if message.client != *user {
 				user.conn.Write([]byte(message.data))
@@ -35,8 +35,8 @@ func BroadcastMessages(broadcastedMessages <-chan Request) {
 
 func CreateLogFile() *os.File {
 
-	timeStamp := time.Now()
-	logFileName := fmt.Sprintf("%s-%v.txt", timeStamp.Format("20060102-150405"), Port)
+	timeStamp := time.Now().UTC()
+	logFileName := fmt.Sprintf("%s.txt", timeStamp.Format("20060102-150405"))
 	logFile, err := os.OpenFile(LogFileDir+"/"+logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 
 	if err != nil {
@@ -79,6 +79,6 @@ func removeColors(message string) string {
 }
 
 func GetTimestamp() string {
-	now := time.Now()
+	now := time.Now().UTC()
 	return now.Format("2006-01-02 15:04:05")
 }

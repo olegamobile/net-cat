@@ -18,13 +18,13 @@ type Request struct {
 
 type Users map[string]*Client
 
-var Port = "8989"
-var Lock sync.Mutex
 var LogFile = CreateLogFile()
 var UserList = CreateUserList()
 var MsgHistory string
 var MessagePipe = make(chan Request, 100)
 var BrodcastPipe = make(chan Request, 100)
+var Lock sync.Mutex
+
 var (
 	Green = "\033[32m" // Green text color
 	Red   = "\033[31m" // Red text color
@@ -34,6 +34,7 @@ var (
 
 const RoomSize = 10
 const LogFileDir = "logs"
+
 const welcomeIcon = `
          _nnnn_
         dGGGGMMb
