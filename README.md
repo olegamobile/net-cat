@@ -1,21 +1,67 @@
-This project consists on recreating the NetCat in a Server-Client Architecture that can run in a server mode on a specified port listening for incoming connections, and it can be used in client mode, trying to connect to a specified port and transmitting information to the server.
 
-The project have the following features :
+# TCPChat
 
-TCP connection between server and multiple clients (relation of 1 to many).
-A name requirement to the client.
-Control connections quantity.
-Clients must be able to send messages to the chat.
-Do not broadcast EMPTY messages from a client.
-Messages sent, must be identified by the time that was sent and the user name of who sent the message, example : [2020-01-20 15:48:41][client.name]:[client.message]
-If a Client joins the chat, all the previous messages sent to the chat must be uploaded to the new Client.
-If a Client connects to the server, the rest of the Clients must be informed by the server that the Client joined the group.
-If a Client exits the chat, the rest of the Clients must be informed by the server that the Client left.
-All Clients must receive the messages sent by other Clients.
-If a Client leaves the chat, the rest of the Clients must not disconnect.
-If there is no port specified, then set as default the port 8989. Otherwise, program must respond with usage message: [USAGE]: ./TCPChat $port
-Running the Test:
+This project is a recreation of the `NetCat` (`nc`) command-line utility in a Server-Client architecture. It enables TCP-based group chat functionality, supporting multiple clients connected to a single server.
 
-sh
-Copy code
-go test -v testNet_cat.go
+## Features
+
+- **TCP Connection**: Establishes a 1-to-many relationship between a server and multiple clients.
+- **Client Identification**: Clients must provide a unique name upon connection.
+- **Connection Control**: Manages the number of active client connections.
+- **Message Transmission**: Clients can send messages to the group chat.
+- **Message Format**: Each message includes:
+  - Timestamp of when it was sent.
+  - Name of the client who sent the message.
+  - Message content.
+  - Example: `[2024-12-26 15:48:41][Oleg]: Hello, Grit:Lab!`
+- **Chat History**: New clients joining the chat receive all previously sent messages.
+- **Client Notifications**:
+  - When a client joins, all other clients are notified.
+  - When a client leaves, all other clients are informed.
+- **No Empty Messages**: Empty messages are not broadcast to the group.
+- **Persistent Connections**: Clients leaving the chat do not cause disconnections for remaining clients.
+  **Implemented commands**: Clients can leave the chat using command `/exit`.
+- **Port**: The default port is `8989` if none is specified. If no port is provided, the program responds with the usage message:
+  ```
+  [USAGE]: ./TCPChat $port
+  ```
+
+## How to Run
+
+1. **Build**:
+   ```bash
+   ./builder.sh
+   ```
+
+2. **Run**:
+   Start the server using the executable:
+   ```bash
+   ./TCPChat 8989
+   ```
+   Replace `8989` with your desired port number if necessary.
+
+3. **Connect a Client**:
+   ```bash
+   nc localhost 8989
+   ```
+   The client will be prompted to enter a name to join the chat.
+
+## Dependencies
+
+- Go version 1.16 or later.
+
+
+## Notes
+
+- Ensure the port number is valid and not in use by other applications.
+- For more information on `NetCat`, refer to its manual using:
+  ```bash
+  man nc
+  ```
+
+Enjoy chatting!
+
+
+## Authors
+
+- [Anastasia Suhareva](https://01.gritlab.ax/git/asuharev) & [Oleg Balandin](https://01.gritlab.ax/git/obalandi) 
