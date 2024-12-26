@@ -34,16 +34,12 @@ func BroadcastMessages(broadcastedMessages <-chan Request) {
 }
 
 func CreateLogFile() *os.File {
-
 	timeStamp := time.Now().UTC()
 	logFileName := fmt.Sprintf("%s.txt", timeStamp.Format("20060102-150405"))
 	logFile, err := os.OpenFile(LogFileDir+"/"+logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
-
 	if err != nil {
 		log.Fatalf("Cannot create log file: %v", err)
 	}
-
-	fmt.Println("Log file " + logFileName + " is created")
 	return logFile
 }
 
